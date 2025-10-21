@@ -89,6 +89,9 @@ if [ -z "$MOST_RECENT_FILE" ]; then
     exit 1
 fi
 
+# Create temporary file
+TMPFILE=$(mktemp)
+
 # Extract and format messages, skipping empty ones
 jq -r --argjson include_thinking "$INCLUDE_THINKING" '
     select(.type == "user" or .type == "assistant") |
@@ -133,4 +136,6 @@ jq -r --argjson include_thinking "$INCLUDE_THINKING" '
     else
         empty
     end
-' "$MOST_RECENT_FILE"
+' "$MOST_RECENT_FILE" | sed '/<bash-input>/,/<\/bash-stderr>/d; /<command-name>/,/<command-args><\/command-args>/d; /^Caveat:/d; /^<local-command-/d; /^<system-reminder>/d' > "$TMPFILE"
+
+echo "$TMPFILE"
